@@ -1,0 +1,27 @@
+name: Coleta diária Amazon
+
+on:
+  schedule:
+    - cron: '0 11 * * *' # todo dia às 11:00 UTC (8h em Brasília)
+  workflow_dispatch: # botão "Run workflow" para rodar na hora
+
+jobs:
+  coletar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    defaults:
+      run:
+        working-directory: coletor
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: coletor/package-lock.json
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: node src/run.js
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
